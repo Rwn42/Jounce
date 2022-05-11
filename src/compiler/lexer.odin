@@ -30,14 +30,17 @@ lex_file :: proc(filename: string, token_buffer: ^[dynamic]Token){
                 col += (token_start - col) + len(value)
             }
 
-            append(token_buffer, Token{row=row, col=token_start, file=filename, typ=typ, value=value})
+            //a value of "" is returned if a comment was encountered
+            //system was built this way if we want comments to be tokens at some point
+            if value != "" do append(token_buffer, Token{row=row, col=token_start, file=filename, typ=typ, value=value})
 
+            //checks to see if we are at the end of the line
             if col >= len(line)-1 do break
         }
     }
 }
 
-//starts at a given location of a string and returns how many characters it read
+//starts at a given location of a string and returns the start of a token, its value, and type.
 next_token :: proc(start: int, str: string) -> (int, string, Token_Type){
     token_start:int
     typ: Token_Type
@@ -57,8 +60,13 @@ next_token :: proc(start: int, str: string) -> (int, string, Token_Type){
     for col := token_start; col < len(str); col += 1{
         ch := rune(str[col])
         if typ != .STR && typ != .CHAR{
+            //non string or character literal tokens are space seperated
+            //break in this context basically says the token is over
             if strings.is_space(ch){
                 break
+            }else if ch == '#'{
+               //if a comment is encountered just skip the rest of the line
+               return len(str), "", .ID
             }
         }
 
@@ -85,6 +93,7 @@ next_token :: proc(start: int, str: string) -> (int, string, Token_Type){
     return token_start, value, typ
 }
 
+//returns the token type (does not return string or character that type is determined while lexing)
 determine_token_type :: proc(value: string) -> Token_Type{
     //check for bool
     if value == "true" || value == "false" do return .BOOL

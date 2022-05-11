@@ -9,14 +9,11 @@ Compiler :: struct{
 //main application entry point
 compile_program :: proc(entry_file: string){
     compiler := Compiler{}
+    compiler.tokens = make([dynamic]Token)
     defer compiler_delete(&compiler)
 
-    compiler.tokens = make([dynamic]Token)
-
-    //get entry point tokens to parse imports
     lex_file(entry_file, &compiler.tokens)
-    fmt.println(compiler.tokens)
-    
+    //TODO imports
 }
 
 compiler_delete :: proc(compiler: ^Compiler){
