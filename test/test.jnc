@@ -1,11 +1,11 @@
-fn main is
-    'a'
-    b
-    my_const
+while 2 2 == do
+    if 1 1 == do
+        'A'
+    else 2 2 == do
+        'B'
+    else
+        'C'
+    end
+    'D'
 end
-
-const my_const is true
-
-fn b is
-    'b'
-end
+'e'

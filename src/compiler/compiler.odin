@@ -12,9 +12,10 @@ Identifier :: struct{
 Block :: struct{
     start: i32,
     typ: Block_Type,
+    ips_to_reference_end: [dynamic]i32,
 }
 
-Block_Type :: enum {FUNCTION}
+Block_Type :: enum {FUNCTION, IF, WHILE,}
 
 Compiler :: struct{
     tokens: [dynamic]Token,
@@ -47,7 +48,9 @@ compile_program :: proc(entry_file: string){
         os.exit(1)
     }
 
-    fmt.println(compiler.program)
+    for inst, ip in compiler.program{
+        fmt.printf("%d %s %d \n",ip, inst.operation, inst.operand)
+    }
 }
 
 compile_tokens :: proc(compiler: ^Compiler){
@@ -74,8 +77,8 @@ compile_tokens :: proc(compiler: ^Compiler){
         }
     }
     append(&program, Instruction{.HALT, 0})
-    fmt.println(declared_constants)
-    fmt.println(declared_functions)
+    //fmt.println(declared_constants)
+    //fmt.println(declared_functions)
     
 }
 
@@ -89,14 +92,53 @@ compile_keyword_token :: proc(compiler: ^Compiler, token: Token, idx:int){
             declared_constants[tokens[idx+1].value] = i32_from_token(tokens[idx+3])
             skip_count = 3
         case "fn":
-            append(&blocks, Block{current_ip(&program)+1, .FUNCTION})
+            append(&blocks, Block{start=current_ip(&program)+1, typ=.FUNCTION})
             declared_functions[tokens[idx+1].value] = current_ip(&program)+1
             skip_count = 2
+        case "if":
+            append(&blocks, Block{start=current_ip(&program)+1, typ=.IF})
+        case "while":
+            append(&blocks, Block{start=current_ip(&program)+1, typ=.WHILE})
+        case "do":
+            append(&program, Instruction{.JNE, 69})
+            append(&blocks[len(blocks)-1].ips_to_reference_end, current_ip(&program))
+        case "else":
+            append(&program, Instruction{.JMP, 69})
+            do_loc := pop(&blocks[len(blocks)-1].ips_to_reference_end)
+            program[do_loc].operand = current_ip(&program)+1
+            append(&blocks[len(blocks)-1].ips_to_reference_end, current_ip(&program))
         case "end":
             block := pop(&blocks)
-            if block.typ == .FUNCTION do append(&program, Instruction{.RET, 0})
+            if block.typ == .FUNCTION {
+                append(&program, Instruction{.RET, 0})
+            }else if block.typ == .IF{
+                for ip in block.ips_to_reference_end{
+                    program[ip].operand = current_ip(&program)+1
+                }
+            }else if block.typ == .WHILE{
+                ip := pop(&block.ips_to_reference_end)
+                append(&program, Instruction{.JMP, block.start})
+                program[ip].operand = current_ip(&program)+1
+            }    
+            delete(block.ips_to_reference_end)
         case "ret":
             append(&program, Instruction{.RET, 0})
+        case "+":
+            append(&program, Instruction{.ADD, 1})
+        case "-":
+            append(&program, Instruction{.ADD, -1})
+        case "*":
+            append(&program, Instruction{.MUL, 1})
+        case "/":
+            append(&program, Instruction{.MUL, -1})
+        case "==":
+            append(&program, Instruction{.EQ, 1})
+        case "!=":
+            append(&program, Instruction{.EQ, 0})
+        case "<":
+            append(&program, Instruction{.LT, 1})
+        case ">":
+            append(&program, Instruction{.LT, 0})
         case:
             fmt.eprintf("Keyword %s is not implemented \n", value)
     }

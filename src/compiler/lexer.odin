@@ -10,6 +10,7 @@ lex_file :: proc(filename: string, token_buffer: ^[dynamic]Token){
     filedata, ok := os.read_entire_file_from_filename(filename)
     if !ok{
         fmt.printf("ERROR: Could Not Read File %s \n", filename)
+        os.exit(1)
     }
     defer delete(filedata)
 
