@@ -1,0 +1,11 @@
+fn main is
+    'a'
+    b
+    my_const
+end
+
+const my_const is true
+
+fn b is
+    'b'
+end

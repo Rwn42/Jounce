@@ -93,17 +93,3 @@ next_token :: proc(start: int, str: string) -> (int, string, Token_Type){
     return token_start, value, typ
 }
 
-//returns the token type (does not return string or character that type is determined while lexing)
-determine_token_type :: proc(value: string) -> Token_Type{
-    //check for bool
-    if value == "true" || value == "false" do return .BOOL
-
-    //checks for int
-    _, ok := strconv.parse_int(value)
-    if ok do return .INT
-
-    //checks for keyword
-    for keyword in Keywords do if value == keyword do return .KEYWORD 
-    
-    return .ID
-}
