@@ -1,11 +1,3 @@
-while 2 2 == do
-    if 1 1 == do
-        'A'
-    else 2 2 == do
-        'B'
-    else
-        'C'
-    end
-    'D'
+fn f is
+    97 putc
 end
-'e'

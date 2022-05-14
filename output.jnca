@@ -1,0 +1,10 @@
+-------------------
+|Jounce IR as Text|
+-------------------
+0   PUSH 2 
+1   PUSH 3 
+2   EQ 1 
+3   JNE 6 
+4   PUSH 10 
+5   SYSCALL 10 
+6   HALT 0 

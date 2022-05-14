@@ -2,6 +2,7 @@ package main
 
 import "core:fmt"
 import "core:os"
+import "core:mem"
 import "../instructions"
 
 Identifier :: struct{
@@ -34,7 +35,7 @@ Compiler :: struct{
 */
 
 //main application entry point
-compile_program :: proc(entry_file: string){
+compile_program :: proc(entry_file: string, save_as_ir: bool){
     compiler := Compiler{}
     compiler.tokens = make([dynamic]Token)
     defer compiler_delete(&compiler)
@@ -47,9 +48,10 @@ compile_program :: proc(entry_file: string){
     if !ok{
         os.exit(1)
     }
-
-    for inst, ip in compiler.program{
-        fmt.printf("%d %s %d \n",ip, inst.operation, inst.operand)
+    if save_as_ir{
+        compiler_save_as_ir(&compiler)
+    }else{
+        compiler_save_as_text(&compiler)
     }
 }
 
@@ -77,9 +79,6 @@ compile_tokens :: proc(compiler: ^Compiler){
         }
     }
     append(&program, Instruction{.HALT, 0})
-    //fmt.println(declared_constants)
-    //fmt.println(declared_functions)
-    
 }
 
 //spit up from compile_tokens function mainly for readability sake
@@ -134,11 +133,15 @@ compile_keyword_token :: proc(compiler: ^Compiler, token: Token, idx:int){
         case "==":
             append(&program, Instruction{.EQ, 1})
         case "!=":
-            append(&program, Instruction{.EQ, 0})
+            append(&program, Instruction{.EQ, -1})
         case "<":
             append(&program, Instruction{.LT, 1})
         case ">":
-            append(&program, Instruction{.LT, 0})
+            append(&program, Instruction{.LT, -1})
+        case "puti":
+            append(&program, Instruction{.SYSCALL, 10})
+        case "putc":
+            append(&program, Instruction{.SYSCALL, 11})
         case:
             fmt.eprintf("Keyword %s is not implemented \n", value)
     }
@@ -186,4 +189,56 @@ compiler_delete :: proc(compiler: ^Compiler){
     delete(declared_constants)
     delete(declared_functions)
     delete(blocks)
+}
+
+compiler_save_as_text :: proc(compiler: ^Compiler){
+    if !os.is_file("output.jnca"){
+        fd, err := os.open("output.jnca", os.O_CREATE, 0o777)
+        if err != os.ERROR_NONE{
+            fmt.eprintln("ERROR: Cannot open output file. Compilation Failed")
+            os.exit(1)
+        }
+    }
+
+    fd, err := os.open("output.jnca", os.O_WRONLY, 0o777)
+    if err != os.ERROR_NONE{
+        fmt.eprintln("ERROR: Cannot open output file. Compilation Failed")
+        os.exit(1)
+    }
+    defer os.close(fd)
+    
+    fmt.fprintf(fd, "-------------------\n")
+    fmt.fprintf(fd, "|Jounce IR as Text|\n")
+    fmt.fprintf(fd, "-------------------\n")
+    for inst, ip in compiler.program{
+        fmt.fprintf(fd, "%d", ip)
+
+        ip_as_string := fmt.aprintf("%d", ip)
+        if ls := len(ip_as_string); ls <= 1{
+            fmt.fprint(fd, "  ")
+        }else if ls <= 2{
+            fmt.fprint(fd, " ")
+        }
+        delete(ip_as_string)
+
+        fmt.fprintf(fd, " %s %d \n", inst.operation, inst.operand)
+    }
+}
+
+compiler_save_as_ir :: proc(compiler: ^Compiler){
+    if !os.is_file("output.jnci"){
+        fd, err := os.open("output.jnci", os.O_CREATE, 0o777)
+        if err != os.ERROR_NONE{
+            fmt.eprintln("ERROR: Cannot open output file. Compilation Failed")
+            os.exit(1)
+        }
+    }
+    fd, err := os.open("output.jnci", os.O_WRONLY, 0o777)
+    if err != os.ERROR_NONE{
+        fmt.eprintln("ERROR: Cannot open output file. Compilation Failed")
+        os.exit(1)
+    }
+    defer os.close(fd)
+
+    os.write(fd, mem.slice_to_bytes(compiler.program[:]))
 }
