@@ -3,6 +3,7 @@ package main
 import "core:fmt"
 import "core:os"
 import "core:mem"
+import "core:unicode/utf8"
 import "../instructions"
 
 Identifier :: struct{
@@ -14,6 +15,7 @@ Block :: struct{
     start: i32,
     typ: Block_Type,
     ips_to_reference_end: [dynamic]i32,
+    lv_count: int,
 }
 
 Block_Type :: enum {FUNCTION, IF, WHILE,}
@@ -26,6 +28,9 @@ Compiler :: struct{
     declared_constants: map[string]i32,
     declared_functions: map[string]i32,
     skip_count: int,
+    lv_loc: int,
+    lvs: map[string]int,
+    strings: [dynamic]u8,
 }
 
 /*
@@ -58,6 +63,10 @@ compile_program :: proc(entry_file: string, save_as_ir: bool){
 compile_tokens :: proc(compiler: ^Compiler){
     using compiler
     using instructions
+    //look for main function
+    append(&program, Instruction{.HALT, 1})
+    append(&encountered_identifiers, Identifier{Token{value="main"}, current_ip(&program)})
+
     for token, idx in tokens{
         using token
         if skip_count > 0{
@@ -69,10 +78,23 @@ compile_tokens :: proc(compiler: ^Compiler){
         }else if typ == .KEYWORD{
             compile_keyword_token(compiler, token, idx)
         }else if typ == .STR{
-            fmt.println("ERROR: strings not yet supported")
+            append(&program, Instruction{.PUSH, i32(len(strings))})
+
+            runes := utf8.string_to_runes(value)
+            rune_data := mem.slice_to_bytes(runes)
+            for b in rune_data{
+                append(&strings, b)
+            }
+            
+            append(&program, Instruction{.PUSH, i32(len(rune_data))})
+            delete(runes)
         }else if typ == .ID{
-            append(&program, Instruction{.HALT, 1})
-            append(&encountered_identifiers, Identifier{token, current_ip(&program)})
+            if value in lvs{
+                append(&program, Instruction{.PUSHLV, i32(lvs[value])})
+            }else{
+                append(&program, Instruction{.HALT, 1})
+                append(&encountered_identifiers, Identifier{token, current_ip(&program)})
+            }
         }else{
             fmt.eprintf("ERROR: Malformed Token: %s @ Row: %d, Col: %d, filename: %s, type: %s \n", value, row, col, file, typ)
             os.exit(1)
@@ -118,10 +140,22 @@ compile_keyword_token :: proc(compiler: ^Compiler, token: Token, idx:int){
                 ip := pop(&block.ips_to_reference_end)
                 append(&program, Instruction{.JMP, block.start})
                 program[ip].operand = current_ip(&program)+1
-            }    
+            }
+            lv_loc -= block.lv_count    
             delete(block.ips_to_reference_end)
         case "ret":
             append(&program, Instruction{.RET, 0})
+        case "->":
+            name := tokens[idx+1].value
+            if name in lvs{
+                append(&program, Instruction{.MVLV, i32(lvs[name])})
+            }else{
+                lvs[name] = lv_loc
+                append(&program, Instruction{.MVLV, i32(lv_loc)})
+                lv_loc += 1
+                blocks[len(blocks)-1].lv_count += 1
+            }
+            skip_count = 1
         case "+":
             append(&program, Instruction{.ADD, 1})
         case "-":
@@ -142,6 +176,8 @@ compile_keyword_token :: proc(compiler: ^Compiler, token: Token, idx:int){
             append(&program, Instruction{.SYSCALL, 10})
         case "putc":
             append(&program, Instruction{.SYSCALL, 11})
+        case "puts":
+            append(&program, Instruction{.SYSCALL, 12})
         case:
             fmt.eprintf("Keyword %s is not implemented \n", value)
     }
@@ -158,7 +194,11 @@ link :: proc(compiler: ^Compiler) -> bool{
         if token.value in declared_constants{
             program[ip] = Instruction{.PUSH, declared_constants[token.value]}
         }else if token.value in declared_functions{
-            program[ip] = Instruction{.CALL, declared_functions[token.value]}
+            if token.value == "main"{
+                program[ip] = Instruction{.JMP, declared_functions[token.value]}
+            }else{
+                program[ip] = Instruction{.CALL, declared_functions[token.value]}
+            }
         }else{
             fmt.eprintf("ERROR: Undeclared Identifier %s @ ", token.value)
             fmt.eprintf("row: %d, col: %d, filename: %s \n", token.row, token.col, token.file)
@@ -189,6 +229,8 @@ compiler_delete :: proc(compiler: ^Compiler){
     delete(declared_constants)
     delete(declared_functions)
     delete(blocks)
+    delete(lvs)
+    delete(strings)
 }
 
 compiler_save_as_text :: proc(compiler: ^Compiler){
@@ -240,5 +282,10 @@ compiler_save_as_ir :: proc(compiler: ^Compiler){
     }
     defer os.close(fd)
 
+    p_len := transmute([4]u8)u32le(len(compiler.program))
+
+    os.write(fd, p_len[:])
     os.write(fd, mem.slice_to_bytes(compiler.program[:]))
+    os.write(fd, compiler.strings[:])
+    
 }
