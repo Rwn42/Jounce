@@ -1,6 +1,21 @@
 # Jounce
 Stack-Based, concatenative, programming language. Built for school science fair not intended for real use in any capacity. Inspired from the Porth language written by Tsoding.
 
+## On The Docket
+- [] refactor (readability, errors and structure)
+- [] general heap allocations
+- [] move the ("putc", "puti", "puts", ...) commands into a standard library
+- [] potentially move syscalls from a switch statement to a map for faster lookup
+- [] add some syntax sugar for function parameters maybe (fn main is p1 p2 p3 in ... end) so this would
+make p1 p2 p3 all local variables
+- [] improve CLI (file output name / directory location)
+- [] handle interpreter 
+- [] compile negative numbers
+- [] maybe some syntax sugar for multiple variable assignments (some_func -> a,b)
+- [] better program error checker compile side
+- [] speed optimize compiler
+- [] web based visualization tool / debugger
+
 
 ## Installation
 First you need a working Odin compiler follow the instructions on the [Odin Website.](https://odin-lang.org/)

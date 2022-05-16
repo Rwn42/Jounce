@@ -58,6 +58,9 @@ execute :: proc(vm: ^VM) -> i32{
             case .MUL:
                 stack[sp-2] = i32(f32(stack[sp-2]) * math.pow(f32(stack[sp-1]), f32(operand)))
                 sp -= 1
+            case .MOD:
+                stack[sp-2] = i32(math.remainder(f32(stack[sp-2]), f32(stack[sp-1])))
+                sp -= 1
             case .EQ:
                 if stack[sp-2] == stack[sp-1]{
                     stack[sp-2] = operand
@@ -111,10 +114,6 @@ execute :: proc(vm: ^VM) -> i32{
                 sp += 1
         }
         ip += 1
-        // fmt.println("\n--------")
-        // for i: i32 = 0; i < sp; i += 1{
-        //     fmt.printf("%d ", stack[i])
-        // }
     }
 
     return 0;

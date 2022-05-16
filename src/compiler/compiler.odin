@@ -168,6 +168,8 @@ compile_keyword_token :: proc(compiler: ^Compiler, token: Token, idx:int){
             append(&program, Instruction{.MUL, 1})
         case "/":
             append(&program, Instruction{.MUL, -1})
+        case "%":
+            append(&program, Instruction{.MOD, 0})
         case "==":
             append(&program, Instruction{.EQ, 1})
         case "!=":
