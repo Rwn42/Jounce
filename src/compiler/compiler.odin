@@ -4,6 +4,7 @@ import "core:fmt"
 import "core:os"
 import "core:mem"
 import "core:unicode/utf8"
+import "core:path/filepath"
 import "../instructions"
 
 Identifier :: struct{
@@ -46,7 +47,11 @@ compile_program :: proc(entry_file: string, save_as_ir: bool){
     defer compiler_delete(&compiler)
 
     lex_file(entry_file, &compiler.tokens)
-    //TODO imports
+
+    //adds main function to be scanned for
+    append(&compiler.program, instructions.Instruction{.HALT, 1})
+    append(&compiler.encountered_identifiers, Identifier{Token{value="main"}, current_ip(&compiler.program)})
+
     compile_tokens(&compiler)
 
     ok := link(&compiler)
@@ -64,8 +69,7 @@ compile_tokens :: proc(compiler: ^Compiler){
     using compiler
     using instructions
     //look for main function
-    append(&program, Instruction{.HALT, 1})
-    append(&encountered_identifiers, Identifier{Token{value="main"}, current_ip(&program)})
+    
 
     for token, idx in tokens{
         using token
@@ -178,6 +182,11 @@ compile_keyword_token :: proc(compiler: ^Compiler, token: Token, idx:int){
             append(&program, Instruction{.SYSCALL, 11})
         case "puts":
             append(&program, Instruction{.SYSCALL, 12})
+        case "import":
+            skip_count = 1
+            import_path := fmt.aprintf("./%s/%s.jnc",filepath.dir(file), tokens[idx+1].value)
+            lex_file(import_path, &tokens)
+            delete(import_path)
         case:
             fmt.eprintf("Keyword %s is not implemented \n", value)
     }

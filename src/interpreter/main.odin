@@ -13,9 +13,6 @@ main :: proc(){
     }
     vm := VM{}
     load_program(&vm, os.args[1])
-    for inst in vm.program{
-        fmt.printf(" %s %d \n", inst.operation, inst.operand)
-    }
     execute(&vm)
 
 }
