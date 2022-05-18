@@ -8,8 +8,13 @@ import "core:math"
 import "../instructions"
 
 MAX_STACK_CAP :: 10
-MAX_CALL_STACK_CAP :: 25
+MAX_CALL_STACK_CAP :: 10
 MAX_LOCAL_VARS :: 30
+
+Function_Frame :: struct{
+    call_location: i32,
+    locals: [MAX_LOCAL_VARS]i32,
+}
 
 VM :: struct{
     program: []instructions.Instruction,
@@ -18,11 +23,8 @@ VM :: struct{
     stack: [MAX_STACK_CAP]i32,
     sp: i32,
 
-    call_stack: [MAX_CALL_STACK_CAP]i32,
+    call_stack: [MAX_CALL_STACK_CAP]Function_Frame,
     csp: i32,
-
-    lv_stack: [MAX_LOCAL_VARS]i32,
-    lvsp: i32,
 
     strings: []u8,
 }
@@ -58,9 +60,6 @@ execute :: proc(vm: ^VM) -> i32{
             case .MUL:
                 stack[sp-2] = i32(f32(stack[sp-2]) * math.pow(f32(stack[sp-1]), f32(operand)))
                 sp -= 1
-            case .MOD:
-                stack[sp-2] = i32(math.remainder(f32(stack[sp-2]), f32(stack[sp-1])))
-                sp -= 1
             case .EQ:
                 if stack[sp-2] == stack[sp-1]{
                     stack[sp-2] = operand
@@ -83,14 +82,14 @@ execute :: proc(vm: ^VM) -> i32{
                 }
                 sp -= 1
             case .CALL:
-                call_stack[csp] = ip
+                call_stack[csp] = Function_Frame{call_location=ip}
                 csp += 1
                 ip = operand-1
             case .RET:
                 if csp < 1{
                     return 1
                 }
-                ip = call_stack[csp-1]
+                ip = call_stack[csp-1].call_location
                 csp -= 1
             case .SYSCALL:
                 switch operand{
@@ -107,10 +106,10 @@ execute :: proc(vm: ^VM) -> i32{
                         fmt.print(transmute(string)vm.strings[start:start+len])
                 }
             case .MVLV:
-                lv_stack[operand] = stack[sp-1]
+                call_stack[csp-1].locals[operand] = stack[sp-1]
                 sp -= 1
             case .PUSHLV:
-                stack[sp] = lv_stack[operand]
+                stack[sp] = call_stack[csp-1].locals[operand]
                 sp += 1
         }
         ip += 1

@@ -6,5 +6,5 @@ Instruction :: struct{
 }
 
 Op :: enum {
-    PUSH, HALT, RET, CALL, ADD, MUL, EQ, LT, JNE, JMP, SYSCALL, MVLV, PUSHLV, MOD,
+    PUSH, HALT, RET, CALL, ADD, MUL, EQ, LT, JNE, JMP, SYSCALL, MVLV, PUSHLV,
 }

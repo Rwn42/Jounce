@@ -5,6 +5,7 @@ import "core:os"
 import "core:mem"
 import "core:unicode/utf8"
 import "core:path/filepath"
+import "core:strconv"
 import "../instructions"
 
 Identifier :: struct{
@@ -83,7 +84,6 @@ compile_tokens :: proc(compiler: ^Compiler){
             compile_keyword_token(compiler, token, idx)
         }else if typ == .STR{
             append(&program, Instruction{.PUSH, i32(len(strings))})
-
             runes := utf8.string_to_runes(value)
             rune_data := mem.slice_to_bytes(runes)
             for b in rune_data{
@@ -168,8 +168,6 @@ compile_keyword_token :: proc(compiler: ^Compiler, token: Token, idx:int){
             append(&program, Instruction{.MUL, 1})
         case "/":
             append(&program, Instruction{.MUL, -1})
-        case "%":
-            append(&program, Instruction{.MOD, 0})
         case "==":
             append(&program, Instruction{.EQ, 1})
         case "!=":
@@ -178,12 +176,16 @@ compile_keyword_token :: proc(compiler: ^Compiler, token: Token, idx:int){
             append(&program, Instruction{.LT, 1})
         case ">":
             append(&program, Instruction{.LT, -1})
-        case "puti":
-            append(&program, Instruction{.SYSCALL, 10})
-        case "putc":
-            append(&program, Instruction{.SYSCALL, 11})
-        case "puts":
-            append(&program, Instruction{.SYSCALL, 12})
+        case "syscall":
+            call_number_token := tokens[idx+1]
+            skip_count = 1
+            call_number, ok := strconv.parse_int(call_number_token.value)
+            if !ok{
+                fmt.eprintf("ERROR: A number must follow a syscall")
+                fmt.eprintf("token: %s row: %d, col: %d, filename: %s \n", call_number_token.value, call_number_token.row, call_number_token.col, call_number_token.file)
+            }else{
+                append(&program, Instruction{.SYSCALL, i32(call_number)})
+            }
         case "import":
             skip_count = 1
             import_path := fmt.aprintf("./%s/%s.jnc",filepath.dir(file), tokens[idx+1].value)

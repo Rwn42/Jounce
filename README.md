@@ -4,13 +4,13 @@ Stack-Based, concatenative, programming language. Built for school science fair 
 ## On The Docket
 - [] refactor (readability, errors and structure)
 - [] general heap allocations
-- [] move the ("putc", "puti", "puts", ...) commands into a standard library
-- [] potentially move syscalls from a switch statement to a map for faster lookup
+- [x] move the ("putc", "puti", "puts", ...) commands into a standard library
 - [] add some syntax sugar for function parameters maybe (fn main is p1 p2 p3 in ... end) so this would
 make p1 p2 p3 all local variables
 - [] improve CLI (file output name / directory location)
 - [] handle interpreter 
-- [] compile negative numbers
+- [x] compile negative numbers (seems to work off rip)
+- [] simple macro system
 - [] maybe some syntax sugar for multiple variable assignments (some_func -> a,b)
 - [] better program error checker compile side
 - [] speed optimize compiler
@@ -53,7 +53,8 @@ In Jounce everything on the stack is a number. <br>
 `while a b > do ... end`
 
 ### Constants
-`const my_const is 123`
+`const my_const is 123` <br>
+**NOTE:** Does not yet support strings
 
 ### Functions
 `fn my_func is ... end` <br>

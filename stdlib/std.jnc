@@ -1,0 +1,17 @@
+fn % is
+    -> y
+    -> x
+    x x y / y * -
+end
+
+fn puti is
+    syscall 10
+end
+
+fn puts is
+    syscall 12
+end
+
+fn putc is
+    syscall 11
+end
