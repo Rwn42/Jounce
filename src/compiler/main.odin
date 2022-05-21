@@ -5,30 +5,33 @@ import "core:mem"
 import "core:os"
 
 main_2 :: proc(){
-    if len(os.args) < 2{
-        fmt.println("ERROR: No file specified. Run `junk help` for usage/instructions")
-        os.exit(1)
-    }
-    file_or_command := os.args[1]
-    
-    if file_or_command := os.args[1]; file_or_command == "help"{
-        fmt.println("-----USAGE-----")
-        fmt.println("   junk <filename> <options> -> outputs a .jnci file that the interpreter can run")
-        fmt.println("   Options:")
-        fmt.println("       asm -> saves file as a jnca file which is a textual representation of the IR")
-        fmt.println("       com (default) -> saves file as a jnci file which can be run by the interpreter")
-    }else{
-        if len(os.args) >= 3{
-            if os.args[2] == "asm"{
-                compile_program(file_or_command, false)
-            }else{
-                compile_program(file_or_command, true)
-            }
-        }else{
-            compile_program(file_or_command, true)
-        }   
-    }
-}   
+    //make sure enough arguments were provided
+    if len(os.args) < 4 do print_usage("ERROR: Not Enough Arguments")
+
+    mode, input_filepath, output_filepath := os.args[1], os.args[2], os.args[3]
+
+    //see what mode we rocking with
+    if mode != "com" && mode != "asm" do print_usage()
+
+    //since mode must be com or asm we can just check for the asm case and assume it will be true
+    save_as_ir := true
+    if mode == "asm" do save_as_ir = false
+
+    ok := compile_program(input_filepath, output_filepath, save_as_ir)
+    if ok do fmt.println("Compilation Sucesfull!")
+}
+
+//prints usage and takes in an optional error message to be printed first
+print_usage :: proc(err_msg: string = ""){
+    fmt.eprintln(err_msg)
+    fmt.println("USAGE")
+    fmt.println("   junk <mode> <filename> <output_directory>")
+    fmt.println("   Modes:")
+    fmt.println("       com -> compiles it to IR for interpreter to run")
+    fmt.println("       asm -> compiles to human readable text format")
+    fmt.println("       help -> prints the usage")
+    os.exit(1)
+}
 
 main :: proc(){
     track: mem.Tracking_Allocator

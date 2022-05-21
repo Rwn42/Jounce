@@ -6,11 +6,11 @@ import "core:strings"
 import "core:unicode/utf8"
 import "core:strconv"
 
-lex_file :: proc(filename: string, token_buffer: ^[dynamic]Token){
+lex_file :: proc(filename: string, token_buffer: ^[dynamic]Token) -> bool{
     filedata, ok := os.read_entire_file_from_filename(filename)
     if !ok{
         fmt.printf("ERROR: Could Not Read File %s \n", filename)
-        os.exit(1)
+        return false
     }
     defer delete(filedata)
 
@@ -39,6 +39,7 @@ lex_file :: proc(filename: string, token_buffer: ^[dynamic]Token){
             if col >= len(line)-1 do break
         }
     }
+    return true
 }
 
 //starts at a given location of a string and returns the start of a token, its value, and type.

@@ -42,36 +42,32 @@ Compiler :: struct{
 */
 
 //main application entry point
-compile_program :: proc(entry_file: string, save_as_ir: bool){
+compile_program :: proc(input_filepath: string, output_filepath: string, save_as_ir: bool) -> bool{
+
+    //make our compiler object
     compiler := Compiler{}
-    compiler.tokens = make([dynamic]Token)
     defer compiler_delete(&compiler)
 
-    lex_file(entry_file, &compiler.tokens)
-
     //adds main function to be scanned for
-    append(&compiler.program, instructions.Instruction{.HALT, 1})
+    append(&compiler.program, instructions.Instruction{.CALL, 69})
     append(&compiler.encountered_identifiers, Identifier{Token{value="main"}, current_ip(&compiler.program)})
 
-    compile_tokens(&compiler)
+    lex_file(input_filepath, &compiler.tokens) or_return
+    compile_tokens(&compiler) or_return
+    link(&compiler) or_return
 
-    ok := link(&compiler)
-    if !ok{
-        os.exit(1)
-    }
     if save_as_ir{
-        compiler_save_as_ir(&compiler)
+        compiler_save_as_ir(&compiler, output_filepath) or_return
     }else{
-        compiler_save_as_text(&compiler)
+        compiler_save_as_text(&compiler, output_filepath) or_return
     }
+
+    return true
 }
 
-compile_tokens :: proc(compiler: ^Compiler){
-    using compiler
+compile_tokens :: proc(using compiler: ^Compiler) -> bool{
     using instructions
-    //look for main function
     
-
     for token, idx in tokens{
         using token
         if skip_count > 0{
@@ -101,17 +97,16 @@ compile_tokens :: proc(compiler: ^Compiler){
             }
         }else{
             fmt.eprintf("ERROR: Malformed Token: %s @ Row: %d, Col: %d, filename: %s, type: %s \n", value, row, col, file, typ)
-            os.exit(1)
+            return false
         }
     }
     append(&program, Instruction{.HALT, 0})
+    return true
 }
 
 //spit up from compile_tokens function mainly for readability sake
-compile_keyword_token :: proc(compiler: ^Compiler, token: Token, idx:int){
-    using compiler
+compile_keyword_token :: proc(using compiler: ^Compiler, using token: Token, idx:int){
     using instructions
-    using token
     switch value {
         case "const":
             declared_constants[tokens[idx+1].value] = i32_from_token(tokens[idx+3])
@@ -188,9 +183,14 @@ compile_keyword_token :: proc(compiler: ^Compiler, token: Token, idx:int){
             }
         case "import":
             skip_count = 1
-            import_path := fmt.aprintf("./%s/%s.jnc",filepath.dir(file), tokens[idx+1].value)
-            lex_file(import_path, &tokens)
+            dir_root := filepath.dir(file)
+            import_path := fmt.aprintf("./%s/%s.jnc", dir_root, tokens[idx+1].value)
+            ok := lex_file(import_path, &tokens)
             delete(import_path)
+            delete(dir_root)
+            if !ok{
+                os.exit(1)
+            }
         case:
             fmt.eprintf("Keyword %s is not implemented \n", value)
     }
@@ -199,8 +199,7 @@ compile_keyword_token :: proc(compiler: ^Compiler, token: Token, idx:int){
 
   
 
-link :: proc(compiler: ^Compiler) -> bool{
-    using compiler
+link :: proc(using compiler: ^Compiler) -> bool{
     using instructions
     for identifier in encountered_identifiers{
         using identifier
@@ -246,28 +245,17 @@ compiler_delete :: proc(compiler: ^Compiler){
     delete(strings)
 }
 
-compiler_save_as_text :: proc(compiler: ^Compiler){
-    if !os.is_file("output.jnca"){
-        fd, err := os.open("output.jnca", os.O_CREATE, 0o777)
-        if err != os.ERROR_NONE{
-            fmt.eprintln("ERROR: Cannot open output file. Compilation Failed")
-            os.exit(1)
-        }
-    }
+compiler_save_as_text :: proc(compiler: ^Compiler, output_filepath: string) -> bool{
+    fd, err := os.open(output_filepath, os.O_CREATE | os.O_WRONLY, 0o777)
 
-    fd, err := os.open("output.jnca", os.O_WRONLY, 0o777)
     if err != os.ERROR_NONE{
-        fmt.eprintln("ERROR: Cannot open output file. Compilation Failed")
-        os.exit(1)
+        fmt.eprintf("ERROR: Cannot open output file %s", output_filepath)
+        return false
     }
     defer os.close(fd)
     
-    fmt.fprintf(fd, "-------------------\n")
-    fmt.fprintf(fd, "|Jounce IR as Text|\n")
-    fmt.fprintf(fd, "-------------------\n")
     for inst, ip in compiler.program{
         fmt.fprintf(fd, "%d", ip)
-
         ip_as_string := fmt.aprintf("%d", ip)
         if ls := len(ip_as_string); ls <= 1{
             fmt.fprint(fd, "  ")
@@ -275,30 +263,27 @@ compiler_save_as_text :: proc(compiler: ^Compiler){
             fmt.fprint(fd, " ")
         }
         delete(ip_as_string)
-
         fmt.fprintf(fd, " %s %d \n", inst.operation, inst.operand)
     }
+
+    return true
 }
 
-compiler_save_as_ir :: proc(compiler: ^Compiler){
-    if !os.is_file("output.jnci"){
-        fd, err := os.open("output.jnci", os.O_CREATE, 0o777)
-        if err != os.ERROR_NONE{
-            fmt.eprintln("ERROR: Cannot open output file. Compilation Failed")
-            os.exit(1)
-        }
-    }
-    fd, err := os.open("output.jnci", os.O_WRONLY, 0o777)
+
+compiler_save_as_ir :: proc(compiler: ^Compiler, output_filepath: string) -> bool{
+    fd, err := os.open(output_filepath, os.O_CREATE | os.O_WRONLY, 0o777)
+
     if err != os.ERROR_NONE{
-        fmt.eprintln("ERROR: Cannot open output file. Compilation Failed")
-        os.exit(1)
+        fmt.eprintf("ERROR: Cannot open output file %s", output_filepath)
+        return false
     }
     defer os.close(fd)
 
-    p_len := transmute([4]u8)u32le(len(compiler.program))
+    program_length_as_bytes := transmute([4]u8)u32le(len(compiler.program))
 
-    os.write(fd, p_len[:])
+    os.write(fd, program_length_as_bytes[:])
     os.write(fd, mem.slice_to_bytes(compiler.program[:]))
     os.write(fd, compiler.strings[:])
-    
+
+    return true
 }
