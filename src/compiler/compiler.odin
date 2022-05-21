@@ -114,7 +114,24 @@ compile_keyword_token :: proc(using compiler: ^Compiler, using token: Token, idx
         case "fn":
             append(&blocks, Block{start=current_ip(&program)+1, typ=.FUNCTION})
             declared_functions[tokens[idx+1].value] = current_ip(&program)+1
-            skip_count = 2
+            skip_count = 1
+        case "is":
+             break
+        case "of":
+            i := 1
+            for true{
+                name := tokens[idx+i].value
+                if name == "is"{
+                    break
+                }
+                lvs[name] = lv_loc
+                
+                append(&program, Instruction{.MVLV, i32(lv_loc)})
+                lv_loc += 1
+                blocks[len(blocks)-1].lv_count += 1
+                i += 1
+            }
+            skip_count = i
         case "if":
             append(&blocks, Block{start=current_ip(&program)+1, typ=.IF})
         case "while":
@@ -207,7 +224,7 @@ link :: proc(using compiler: ^Compiler) -> bool{
             program[ip] = Instruction{.PUSH, declared_constants[token.value]}
         }else if token.value in declared_functions{
             if token.value == "main"{
-                program[ip] = Instruction{.JMP, declared_functions[token.value]}
+                program[ip] = Instruction{.CALL, declared_functions[token.value]}
             }else{
                 program[ip] = Instruction{.CALL, declared_functions[token.value]}
             }

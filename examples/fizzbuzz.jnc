@@ -2,11 +2,9 @@ import ../stdlib/std
 
 fn main is
    16 fizzbuzz
-   -1 3 - puti
 end
 
-fn fizzbuzz bis
-   -> limit
+fn fizzbuzz of limit is
    1 -> i
    while i limit < do
       if i 3 % 0 == do

@@ -5,10 +5,8 @@ Stack-Based, concatenative, programming language. Built for school science fair 
 - [] refactor (readability, errors and structure)
 - [] general heap allocations
 - [x] move the ("putc", "puti", "puts", ...) commands into a standard library
-- [] add some syntax sugar for function parameters maybe (fn main is p1 p2 p3 in ... end) so this would
-make p1 p2 p3 all local variables
-- [] improve CLI (file output name / directory location)
-- [] handle interpreter 
+- [x] add some syntax sugar for function parameters
+- [x] improve CLI (file output name / directory location)
 - [x] compile negative numbers (seems to work off rip)
 - [] simple macro system
 - [] maybe some syntax sugar for multiple variable assignments (some_func -> a,b)
@@ -69,7 +67,8 @@ fn b is
     3
 end
 ```
-the 3 is available because its left on the stack after function b is complete so this would print 3 if a was called.
+the 3 is available because its left on the stack after function b is complete so this would print 3 if a was called.<br>
+function parameters are as follows `fn a of some_param1 some_param2 is ... end`
 
 ### Variables
 `10 -> x` -> makes a new variable called x and 10 is stored <br>

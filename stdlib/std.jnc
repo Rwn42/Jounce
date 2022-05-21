@@ -1,6 +1,4 @@
-fn % is
-    -> y
-    -> x
+fn % of y x is
     x x y / y * -
 end
 
