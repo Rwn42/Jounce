@@ -21,9 +21,8 @@ Then clone the repository and run the build script to obtain the Junk compiler a
 The language tools currently support Linux however it should work on Windows & Mac as well.
 
 ## Usage
-Run `junk <filename> <options>` to compile a source file. <br>
+Run `junk <mode> <filename> <output path>` to compile a source file. <br>
 Run `jounce <filename>` to run a compiled source file. <br>
-Currently no options are supported by the compiler.
 
 ## Overview
 

@@ -23,7 +23,7 @@ link :: proc(using compiler: ^Compiler) -> bool{
             program[ip] = Instruction{.PUSH, declared_constants[token.value]}
         }else if token.value in declared_functions{
             if token.value == "main"{
-                program[ip] = Instruction{.CALL, declared_functions[token.value]}
+                program[ip] = Instruction{.JMP, declared_functions[token.value]}
             }else{
                 program[ip] = Instruction{.CALL, declared_functions[token.value]}
             }
