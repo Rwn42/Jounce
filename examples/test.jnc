@@ -1,12 +1,11 @@
 fn main is
-    if 3 1 == do
-        11
-    else 2 4 == do
-        12
+    2 -> x
+    3 -> y
+    if x y == do
+        "hello" syscall 12
+    else x y < do
+        "lt" syscall 12
     else
-        13
+        "gt" syscall 12
     end
-    14
 end
-
-macro x is "string putc"

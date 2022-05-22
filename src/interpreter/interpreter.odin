@@ -75,10 +75,10 @@ execute :: proc(vm: ^VM) -> i32{
                 }
                 sp -= 1
             case .JMP:
-                ip = operand-1
+                ip += operand-1
             case .JNE:
                 if stack[sp-1] != 1{
-                    ip = operand-1
+                    ip += operand-1
                 }
                 sp -= 1
             case .CALL:

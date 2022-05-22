@@ -27,7 +27,7 @@ Compiler :: struct{
 }
 
 Block_Type :: enum{
-    FUNCTION, IF, WHILE,
+    FUNCTION, IF, WHILE, MAIN_FUNCTION,
 }
 
 Block :: struct{
@@ -110,7 +110,11 @@ compile_keyword_token :: proc(using compiler: ^Compiler, using token: Token, idx
         case "macro":
             break
         case "fn":
-            compiler_open_block(compiler, .FUNCTION)
+            if tokens[idx+1].value == "main"{
+                compiler_open_block(compiler, .MAIN_FUNCTION)
+            }else{
+                compiler_open_block(compiler, .FUNCTION)
+            }
             linker.declared_functions[tokens[idx+1].value] = current_ip(&program)+1
             skip_token_count = 1
         case "if":
@@ -123,7 +127,7 @@ compile_keyword_token :: proc(using compiler: ^Compiler, using token: Token, idx
         case "else":
             compiler_add_inst_i32(compiler, .JMP, 2)
             do_location := pop(&open_blocks[len(open_blocks)-1].end_references)
-            program[do_location].operand = current_ip(&program)+1
+            program[do_location].operand = (current_ip(&program)+1 - do_location)
             block_add_end_reference(compiler)
         case "end":
             compiler_close_block(compiler)
@@ -201,15 +205,17 @@ compiler_close_block :: proc(using compiler: ^Compiler){
     }
 
     if block.typ == .WHILE{
-        compiler_add_inst(compiler, .JMP, block.start)
+        compiler_add_inst(compiler, .JMP, -(current_ip(&program)+1 - block.start))
         do_location := pop(&block.end_references)
-        program[do_location].operand = current_ip(&program)+1
+        program[do_location].operand = (current_ip(&program)+1 - do_location)
     }else if block.typ == .IF{
         for ip in block.end_references{
-            program[ip].operand = current_ip(&program)+1
+            program[ip].operand = (current_ip(&program)+1 - ip)
         }     
     }else if block.typ == .FUNCTION{
         compiler_add_inst_i32(compiler, .RET, 0)
+    }else if block.typ == .MAIN_FUNCTION{
+        compiler_add_inst_i32(compiler, .HALT, 0)
     }
 }
 
