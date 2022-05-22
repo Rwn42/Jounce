@@ -2,7 +2,7 @@
 Stack-Based, concatenative, programming language. Built for school science fair not intended for real use in any capacity. Inspired from the Porth language written by Tsoding.
 
 ## On The Docket
-- [] refactor (readability, errors and structure)
+- [x] refactor (readability, errors and structure)
 - [] general heap allocations
 - [x] move the ("putc", "puti", "puts", ...) commands into a standard library
 - [x] add some syntax sugar for function parameters
