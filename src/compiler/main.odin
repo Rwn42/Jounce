@@ -17,8 +17,8 @@ main_2 :: proc(){
     save_as_ir := true
     if mode == "asm" do save_as_ir = false
 
-    ok := compile_program(input_filepath, output_filepath, save_as_ir)
-    if ok do fmt.println("Compilation Sucesfull!")
+    compile_program(input_filepath, output_filepath, save_as_ir)
+    fmt.println("Compilation Sucesfull!")
 }
 
 //prints usage and takes in an optional error message to be printed first

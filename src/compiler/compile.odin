@@ -52,26 +52,15 @@ compile_program :: proc(input_filepath: string, output_filepath: string, save_as
 
     lex_file(input_filepath, &tokens) or_return
 
-    ok := compile_tokens(&compiler)
-    if !ok{
-        fmt.println(err_msg)
-        fmt.printf("value: %s row: %d col: %d file: %s \n", err_token.value, err_token.row, err_token.col, err_token.file)
-        return false
-    }
-
-    ok = link(&compiler)
-    if !ok{
-        fmt.println(err_msg)
-        fmt.printf("%s %d %d %s \n", err_token.value, err_token.row, err_token.col, err_token.file)
-        return false
-    }
+    if ok := compile_tokens(&compiler); !ok do compiler_print_error(&compiler)
+       
+    if ok := link(&compiler); !ok do compiler_print_error(&compiler)
 
     if save_as_ir{
         compiler_save_as_ir(&compiler, output_filepath) or_return
     }else{
         compiler_save_as_text(&compiler, output_filepath) or_return
     }
-
     return true
 }
 
@@ -139,15 +128,7 @@ compile_keyword_token :: proc(using compiler: ^Compiler, using token: Token, idx
         case "->":
             compiler_local_variable_assignment(compiler, idx) or_return
         case "import":
-            skip_token_count = 1
-            dir_root := filepath.dir(file)
-            import_path := fmt.aprintf("./%s/%s.jnc", dir_root, tokens[idx+1].value)
-            ok := lex_file(import_path, &tokens)
-            if !ok{
-                os.exit(1)
-            }
-            delete(import_path)
-            delete(dir_root)
+            compiler_import_file(compiler, idx)
         case "syscall":
             call_number_token := tokens[idx+1]
             skip_token_count = 1
@@ -167,8 +148,12 @@ compile_keyword_token :: proc(using compiler: ^Compiler, using token: Token, idx
                 i += 1
             }
             skip_token_count = i
-        case: // default
-        
+        case "is":
+            break;
+        case:
+            err_msg = "ERROR: Keyword May Not Be Implemented"
+            err_token = token
+            return false
     }
     return true
 }
@@ -226,7 +211,7 @@ compiler_close_block :: proc(using compiler: ^Compiler){
     }
 }
 
-block_add_end_reference :: proc(using compiler: ^Compiler){
+block_add_end_reference :: #force_inline proc(using compiler: ^Compiler){
     append(&open_blocks[len(open_blocks)-1].end_references, current_ip(&program))
 }
 
@@ -249,6 +234,27 @@ compiler_local_variable_assignment :: proc(using compiler: ^Compiler, idx: int) 
     return true
 }
 
+compiler_print_error :: proc(using compiler: ^Compiler){
+    fmt.println(err_msg)
+    fmt.printf("token: %s row: %d col: %d file: %s \n", err_token.value, err_token.row, err_token.col, err_token.file)
+    os.exit(1)
+}
+
+compiler_import_file :: proc(using compiler: ^Compiler, idx: int){
+    token := tokens[idx]
+    using token
+
+    skip_token_count = 1
+    dir_root := filepath.dir(file)
+    import_path := fmt.aprintf("./%s/%s.jnc", dir_root, tokens[idx+1].value)
+    ok := lex_file(import_path, &tokens)
+    if !ok{
+        os.exit(1)
+    }
+    delete(import_path)
+    delete(dir_root)
+}
+
 compiler_add_inst :: proc{
     compiler_add_inst_i32,
     compiler_add_inst_int, 
@@ -256,7 +262,7 @@ compiler_add_inst :: proc{
     compiler_add_inst_str,
 }
 
-current_ip :: proc(program: ^[dynamic]instructions.Instruction) -> i32{
+current_ip :: #force_inline proc(program: ^[dynamic]instructions.Instruction) -> i32{
     return i32(len(program)-1)
 }
 
