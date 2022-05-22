@@ -23,18 +23,17 @@ lex_file :: proc(filename: string, token_buffer: ^[dynamic]Token) -> bool{
         col := 0
         for true{
             token_start, value, typ := next_token(col, line)
-
             //len(value) does not account for quotes so this is a nessecary check
             if typ == .STR || typ == .CHAR{
                 col += (token_start - col) + len(value)+2
             }else{
                 col += (token_start - col) + len(value)
             }
-
+        
             //a value of "" is returned if a comment was encountered
             //system was built this way if we want comments to be tokens at some point
             if value != "" do append(token_buffer, Token{row=row, col=token_start, file=filename, typ=typ, value=value})
-
+            
             //checks to see if we are at the end of the line
             if col >= len(line)-1 do break
         }

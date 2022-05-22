@@ -107,6 +107,8 @@ compile_keyword_token :: proc(using compiler: ^Compiler, using token: Token, idx
         case "const":
             linker.declared_constants[tokens[idx+1].value] = i32_from_token(tokens[idx+3])
             skip_token_count = 3
+        case "macro":
+            break
         case "fn":
             compiler_open_block(compiler, .FUNCTION)
             linker.declared_functions[tokens[idx+1].value] = current_ip(&program)+1
@@ -149,7 +151,7 @@ compile_keyword_token :: proc(using compiler: ^Compiler, using token: Token, idx
             }
             skip_token_count = i
         case "is":
-            break;
+            break
         case:
             err_msg = "ERROR: Keyword May Not Be Implemented"
             err_token = token
@@ -289,13 +291,13 @@ compiler_save_as_text :: proc(compiler: ^Compiler, output_filepath: string) -> b
     
     for inst, ip in compiler.program{
         fmt.fprintf(fd, "%d", ip)
-        ip_as_string := fmt.aprintf("%d", ip)
-        if ls := len(ip_as_string); ls <= 1{
-            fmt.fprint(fd, "  ")
-        }else if ls <= 2{
-            fmt.fprint(fd, " ")
-        }
-        delete(ip_as_string)
+        // ip_as_string := fmt.aprintf("%d", ip)
+        // if ls := len(ip_as_string); ls <= 1{
+        //     fmt.fprint(fd, "  ")
+        // }else if ls <= 2{
+        //     fmt.fprint(fd, " ")
+        // }
+        // delete(ip_as_string)
         fmt.fprintf(fd, " %s %d \n", inst.operation, inst.operand)
     }
 

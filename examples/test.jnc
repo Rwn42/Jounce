@@ -8,3 +8,5 @@ fn main is
     end
     14
 end
+
+macro x is "string putc"
