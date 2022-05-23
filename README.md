@@ -24,6 +24,15 @@ The language tools currently support Linux however it should work on Windows & M
 Run `junk <mode> <filename> <output path>` to compile a source file. <br>
 Run `jounce <filename>` to run a compiled source file. <br>
 
+## Hello, World
+```
+@import stdlib/std @end
+
+fn main is
+    "Hello, World!" @puts
+end
+```
+
 ## Overview
 
 ### Arithmetic
@@ -40,7 +49,6 @@ In Jounce everything on the stack is a number. <br>
 - `'a'`-> pushes ascii value of character onto the stack
 - `123` -> pushes the number literal onto the stack
 - `"string"` -> pushes the pointer to the start of the string and the length onto the stack
-
 
 ### If Statement
 - `if a b == do ... end`

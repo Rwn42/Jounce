@@ -117,19 +117,6 @@ compile_tokens :: proc(using compiler: ^Compiler) -> bool{
     return true    
 }
 
-// if typ == .MACRO_INVOKE{
-//             macro_name := strings.trim_left(directive.tokens[0].value, "@")
-//             if macro_name in declared_macros{
-//                 for token, i in declared_macros[macro_name]{
-//                     insert_at_elem(&compiler.tokens, , token)
-//                 }
-//             }else{
-//                 err_msg = "ERROR: Undefined Macro"
-//                 err_token = directive.tokens[0]
-//                 return false
-//             }
-// }
-
 compile_keyword_token :: proc(using compiler: ^Compiler, using token: Token, idx: int) -> bool{
     using instructions
     switch value {
@@ -161,6 +148,20 @@ compile_keyword_token :: proc(using compiler: ^Compiler, using token: Token, idx
             compiler_open_block(compiler, .IF)
         case "while":
              compiler_open_block(compiler, .WHILE)
+        case "break":
+            found_while := false
+            for block, i in open_blocks{
+                if block.typ == .WHILE{
+                    compiler_add_inst_i32(compiler, .JMP, 69)
+                    append(&open_blocks[i].end_references, current_ip(&program))
+                    found_while = true
+                }
+            }
+            if !found_while{
+                err_msg = "ERROR: Break Statement Not In A While Loop"
+                err_token = token
+                return false
+            }
         case "do":
             compiler_add_inst_i32(compiler, .JNE, 69)
             block_add_end_reference(compiler)
@@ -178,7 +179,7 @@ compile_keyword_token :: proc(using compiler: ^Compiler, using token: Token, idx
             skip_token_count = 1
             call_number, ok := strconv.parse_int(call_number_token.value)
             if !ok{
-                err_msg := "ERROR: A number literal must follow a syscall."
+                err_msg = "ERROR: A number literal must follow a syscall."
                 err_token = call_number_token
                 return false
             }else{
@@ -244,8 +245,12 @@ compiler_close_block :: proc(using compiler: ^Compiler){
 
     if block.typ == .WHILE{
         compiler_add_inst(compiler, .JMP, -(current_ip(&program)+1 - block.start))
-        do_location := pop(&block.end_references)
+        do_location := block.end_references[0]
         program[do_location].operand = (current_ip(&program)+1 - do_location)
+        for i := 1; i < len(block.end_references); i += 1{
+            ip := block.end_references[i]
+            program[ip].operand = (current_ip(&program)+1 - ip)
+        }
     }else if block.typ == .IF{
         for ip in block.end_references{
             program[ip].operand = (current_ip(&program)+1 - ip)

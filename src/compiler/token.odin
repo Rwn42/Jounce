@@ -44,4 +44,4 @@ i32_from_token :: proc(token: Token) -> i32{
 }
 
 Keywords :: [?]string{"if", "do", "elif", "else", "end", "is", "+", "-", "*", "/", "fn", "==", 
-"<", ">", "!=", "ret", "while", "->", "@import", "@macro", "syscall", "of"}
+"<", ">", "!=", "ret", "while", "->", "@import", "@macro", "syscall", "of", "break"}
