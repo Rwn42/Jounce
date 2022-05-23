@@ -52,7 +52,8 @@ In Jounce everything on the stack is a number. <br>
 ### Macros
 `@macro my_macro ... @end`<br>
 To use the macro simply put @my_macro wherever you would like.
-macros happen at the token level so if statements, variables and all the like is supported.
+macros happen at the token level so if statements, variables and all the like is supported.<br>
+macros also support the `@macro my_macro of a b is ... @end` syntax in this context the `is` keyword is required.
 
 ### Functions
 `fn my_func is ... end` <br>

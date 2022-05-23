@@ -1,6 +1,6 @@
-fn % of y x is
+@macro % of y x is
     x x y / y * -
-end
+@end
 
 @macro puti syscall 10 @end
 

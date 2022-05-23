@@ -7,13 +7,13 @@ end
 fn fizzbuzz of limit is
    1 -> i
    while i limit < do
-      if i 3 % 0 == do
-         if i 5 % 0 == do
+      if i 3 @% 0 == do
+         if i 5 @% 0 == do
             "fizzbuzz" @puts
          else
             "fizz" @puts
          end
-      else i 5 % 0 == do
+      else i 5 @% 0 == do
          "buzz" @puts
       else
          i @puti
