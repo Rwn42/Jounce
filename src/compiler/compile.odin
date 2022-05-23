@@ -18,6 +18,7 @@ Compiler :: struct{
     open_blocks: [dynamic]Block,
 
     string_bytes: [dynamic]u8,
+    imported_files: [dynamic]string,
     
     skip_token_count: int,
 
@@ -71,7 +72,16 @@ compile_special_directives :: proc(using compiler: ^Compiler) -> bool{
     for directive in special_directives{
         using directive
         if typ == .IMPORT{
+            absolute, new_alloc := filepath.abs(directive.tokens[0].value)
+            for i in 0..<len(imported_files){
+                if imported_files[i] == absolute{
+                    err_msg = "ERROR: Cyclic Import"
+                    err_token = directive.tokens[0]
+                    return false
+                }
+            }
             compiler_import_file(compiler, directive.tokens[0])
+            append(&imported_files, absolute)
         }
     }
     for directive in special_directives{
@@ -329,6 +339,7 @@ compiler_delete :: proc(using compiler: ^Compiler){
     delete(declared_macros)
     delete(program)
     delete(open_blocks)
+    delete(imported_files)
     delete(declared_locals)
     delete(string_bytes)
     linker_delete(&linker)
@@ -345,13 +356,6 @@ compiler_save_as_text :: proc(compiler: ^Compiler, output_filepath: string) -> b
     
     for inst, ip in compiler.program{
         fmt.fprintf(fd, "%d", ip)
-        // ip_as_string := fmt.aprintf("%d", ip)
-        // if ls := len(ip_as_string); ls <= 1{
-        //     fmt.fprint(fd, "  ")
-        // }else if ls <= 2{
-        //     fmt.fprint(fd, " ")
-        // }
-        // delete(ip_as_string)
         fmt.fprintf(fd, " %s %d \n", inst.operation, inst.operand)
     }
 
