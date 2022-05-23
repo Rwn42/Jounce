@@ -107,8 +107,6 @@ compile_keyword_token :: proc(using compiler: ^Compiler, using token: Token, idx
         case "const":
             linker.declared_constants[tokens[idx+1].value] = i32_from_token(tokens[idx+3])
             skip_token_count = 3
-        case "macro":
-            break
         case "fn":
             if tokens[idx+1].value == "main"{
                 compiler_open_block(compiler, .MAIN_FUNCTION)
