@@ -6,7 +6,14 @@ import "core:strings"
 import "core:unicode/utf8"
 import "core:strconv"
 
-lex_file :: proc(filename: string, token_buffer: ^[dynamic]Token) -> bool{
+Directive :: struct{
+    typ: Directive_Type,
+    tokens: [dynamic]Token,
+}
+
+Directive_Type :: enum {END, IMPORT, MACRO_DEF, MACRO_INVOKE}
+
+lex_file :: proc(filename: string, token_buffer: ^[dynamic]Token, special_directives:^[dynamic]Directive) -> bool{
     filedata, ok := os.read_entire_file_from_filename(filename)
     if !ok{
         fmt.printf("ERROR: Could Not Read File %s \n", filename)
@@ -19,6 +26,7 @@ lex_file :: proc(filename: string, token_buffer: ^[dynamic]Token) -> bool{
     lines := strings.split_lines(source_code)
     defer delete(lines)
 
+    save_destination := token_buffer
     for line, row in lines{
         col := 0
         for true{
@@ -29,10 +37,39 @@ lex_file :: proc(filename: string, token_buffer: ^[dynamic]Token) -> bool{
             }else{
                 col += (token_start - col) + len(value)
             }
-        
+            if value != ""{
+                if value[0] == '@'{
+                    if value == "@end"{
+                        save_destination = token_buffer
+                        delete(value)
+                    }else if value == "@import"{
+                        directive := Directive{typ=.IMPORT}
+                        append(special_directives, directive)
+                        save_destination = &special_directives[len(special_directives)-1].tokens
+                        delete(value)
+                    }else if value == "@macro"{
+                        directive := Directive{typ=.MACRO_DEF}
+                        append(special_directives, directive)
+                        save_destination = &special_directives[len(special_directives)-1].tokens
+                        delete(value)
+                    }else{
+                        // directive := Directive{typ=.MACRO_INVOKE}
+                        // append(special_directives, directive)
+                        // save_destination = &special_directives[len(special_directives)-1].tokens
+                        // append(save_destination, Token{row=row, col=token_start, file=filename, typ=typ, value=value})
+                        // save_destination = token_buffer
+                        save_destination = token_buffer
+                        append(save_destination, Token{row=row, col=token_start, file=filename, typ=typ, value=value})
+                    }
+
+                    if col >= len(line)-1 do break
+                    continue
+                }
+            }
+
             //a value of "" is returned if a comment was encountered
             //system was built this way if we want comments to be tokens at some point
-            if value != "" do append(token_buffer, Token{row=row, col=token_start, file=filename, typ=typ, value=value})
+            if value != "" do append(save_destination, Token{row=row, col=token_start, file=filename, typ=typ, value=value})
             
             //checks to see if we are at the end of the line
             if col >= len(line)-1 do break

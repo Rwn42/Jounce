@@ -6,11 +6,14 @@ import "core:mem"
 import "core:unicode/utf8"
 import "core:path/filepath"
 import "core:strconv"
+import "core:strings"
 import "../instructions"
 
 Compiler :: struct{
+    special_directives: [dynamic]Directive,
     tokens: [dynamic]Token,
     program: [dynamic]instructions.Instruction,
+    declared_macros: map[string][]Token,
 
     open_blocks: [dynamic]Block,
 
@@ -50,16 +53,32 @@ compile_program :: proc(input_filepath: string, output_filepath: string, save_as
     compiler_add_inst_i32(&compiler, .CALL, 69)
     append(&linker.encountered_identifiers, Identifier{Token{value="main"}, current_ip(&compiler.program)})
 
-    lex_file(input_filepath, &tokens) or_return
-
+    lex_file(input_filepath, &tokens, &special_directives) or_return
+    if ok := compile_special_directives(&compiler); !ok do compiler_print_error(&compiler)
     if ok := compile_tokens(&compiler); !ok do compiler_print_error(&compiler)
-       
     if ok := link(&compiler); !ok do compiler_print_error(&compiler)
 
     if save_as_ir{
         compiler_save_as_ir(&compiler, output_filepath) or_return
     }else{
         compiler_save_as_text(&compiler, output_filepath) or_return
+    }
+    return true
+}
+
+compile_special_directives :: proc(using compiler: ^Compiler) -> bool{
+    //imports must come first
+    for directive in special_directives{
+        using directive
+        if typ == .IMPORT{
+            compiler_import_file(compiler, directive.tokens[0])
+        }
+    }
+    for directive in special_directives{
+        using directive
+        if typ == .MACRO_DEF{
+            declared_macros[directive.tokens[0].value] = directive.tokens[1:]
+        }
     }
     return true
 }
@@ -76,6 +95,19 @@ compile_tokens :: proc(using compiler: ^Compiler) -> bool{
         if typ == .ID{
             if value in declared_locals{
                 compiler_add_inst(compiler, .PUSHLV, declared_locals[value])
+            }else if value[0] == '@'{
+                macro_name := strings.trim_left(token.value, "@")
+                 if macro_name in declared_macros{
+                    for macro_token, i in declared_macros[macro_name]{
+                        insertable_token := macro_token
+                        insertable_token.value = strings.clone(macro_token.value)
+                        insert_at_elem(&compiler.tokens, idx+i+1, insertable_token)  
+                    }
+                }else{
+                    err_msg = "ERROR: Undefined Macro"
+                    err_token = token
+                    return false
+                }   
             }else{
                 compiler_add_inst_i32(compiler, .HALT, 69)
                 append(&linker.encountered_identifiers, Identifier{token, current_ip(&program)})
@@ -84,6 +116,19 @@ compile_tokens :: proc(using compiler: ^Compiler) -> bool{
     }
     return true    
 }
+
+// if typ == .MACRO_INVOKE{
+//             macro_name := strings.trim_left(directive.tokens[0].value, "@")
+//             if macro_name in declared_macros{
+//                 for token, i in declared_macros[macro_name]{
+//                     insert_at_elem(&compiler.tokens, , token)
+//                 }
+//             }else{
+//                 err_msg = "ERROR: Undefined Macro"
+//                 err_token = directive.tokens[0]
+//                 return false
+//             }
+// }
 
 compile_keyword_token :: proc(using compiler: ^Compiler, using token: Token, idx: int) -> bool{
     using instructions
@@ -104,9 +149,6 @@ compile_keyword_token :: proc(using compiler: ^Compiler, using token: Token, idx
             compiler_add_inst_i32(compiler, .LT, 1)
         case ">":
             compiler_add_inst_i32(compiler, .LT, -1)
-        case "const":
-            linker.declared_constants[tokens[idx+1].value] = i32_from_token(tokens[idx+3])
-            skip_token_count = 3
         case "fn":
             if tokens[idx+1].value == "main"{
                 compiler_open_block(compiler, .MAIN_FUNCTION)
@@ -131,8 +173,6 @@ compile_keyword_token :: proc(using compiler: ^Compiler, using token: Token, idx
             compiler_close_block(compiler)
         case "->":
             compiler_local_variable_assignment(compiler, idx) or_return
-        case "import":
-            compiler_import_file(compiler, idx)
         case "syscall":
             call_number_token := tokens[idx+1]
             skip_token_count = 1
@@ -246,14 +286,11 @@ compiler_print_error :: proc(using compiler: ^Compiler){
     os.exit(1)
 }
 
-compiler_import_file :: proc(using compiler: ^Compiler, idx: int){
-    token := tokens[idx]
-    using token
-
-    skip_token_count = 1
+compiler_import_file :: proc(using compiler: ^Compiler, name_token:Token){
+    using name_token
     dir_root := filepath.dir(file)
-    import_path := fmt.aprintf("./%s/%s.jnc", dir_root, tokens[idx+1].value)
-    ok := lex_file(import_path, &tokens)
+    import_path := fmt.aprintf("./%s/%s.jnc", dir_root, value)
+    ok := lex_file(import_path, &tokens, &special_directives)
     if !ok{
         os.exit(1)
     }
@@ -273,10 +310,18 @@ current_ip :: #force_inline proc(program: ^[dynamic]instructions.Instruction) ->
 }
 
 compiler_delete :: proc(using compiler: ^Compiler){
-    for tk in tokens{
-        delete(tk.value)
+    for token in tokens{
+        delete(token.value)
+    }
+    for directive in special_directives{
+        for token in directive.tokens{
+            delete(token.value)
+        }
+        delete(directive.tokens)
     }
     delete(tokens)
+    delete(special_directives)
+    delete(declared_macros)
     delete(program)
     delete(open_blocks)
     delete(declared_locals)

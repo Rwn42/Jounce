@@ -1,4 +1,4 @@
-import ../stdlib/std
+@import ../stdlib/std @end
 
 fn main is
    16 fizzbuzz
@@ -9,16 +9,16 @@ fn fizzbuzz of limit is
    while i limit < do
       if i 3 % 0 == do
          if i 5 % 0 == do
-            "fizzbuzz" puts
+            "fizzbuzz" @puts
          else
-            "fizz" puts
+            "fizz" @puts
          end
       else i 5 % 0 == do
-         "buzz" puts
+         "buzz" @puts
       else
-         i puti
+         i @puti
       end
-      10 putc
+      10 @putc
       i 1 + -> i
    end
 end

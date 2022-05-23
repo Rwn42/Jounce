@@ -1,11 +1,8 @@
+@import ../stdlib/std @end
+
+
+
 fn main is
-    2 -> x
-    3 -> y
-    if x y == do
-        "hello" syscall 12
-    else x y < do
-        "lt" syscall 12
-    else
-        "gt" syscall 12
-    end
+    100 @puti
+    20 @puti
 end

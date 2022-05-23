@@ -8,7 +8,7 @@ Stack-Based, concatenative, programming language. Built for school science fair 
 - [x] add some syntax sugar for function parameters
 - [x] improve CLI (file output name / directory location)
 - [x] compile negative numbers (seems to work off rip)
-- [] simple macro system
+- [x] simple macro system
 - [] maybe some syntax sugar for multiple variable assignments (some_func -> a,b)
 - [] better program error checker compile side
 - [] speed optimize compiler
@@ -49,9 +49,10 @@ In Jounce everything on the stack is a number. <br>
 ### While Loop
 `while a b > do ... end`
 
-### Constants
-`const my_const is 123` <br>
-**NOTE:** Does not yet support strings
+### Macros
+`@macro my_macro ... @end`<br>
+To use the macro simply put @my_macro wherever you would like.
+macros happen at the token level so if statements, variables and all the like is supported.
 
 ### Functions
 `fn my_func is ... end` <br>
@@ -75,5 +76,5 @@ function parameters are as follows `fn a of some_param1 some_param2 is ... end`
 **Note:** variables are block scoped
 
 ### Imports
-`import some_file` -> allows access to all the functions and constants in the other file <br>
+`@import some_file @end` -> allows access to all the functions and macros in the other file <br>
 **Note:** the imports are not namespaced so if two files both have function `f` then they will conflict.

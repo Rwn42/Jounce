@@ -2,14 +2,8 @@ fn % of y x is
     x x y / y * -
 end
 
-fn puti is
-    syscall 10
-end
+@macro puti syscall 10 @end
 
-fn puts is
-    syscall 12
-end
+@macro puts syscall 12 @end
 
-fn putc is
-    syscall 11
-end
+@macro putc syscall 11 @end
