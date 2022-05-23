@@ -7,3 +7,9 @@
 @macro puts syscall 12 @end
 
 @macro putc syscall 11 @end
+
+@macro putiln syscall 10 10 syscall 11 @end
+
+@macro putsln syscall 12 10 syscall 11 @end
+
+@macro putcln syscall 11 10 syscall 11 @end

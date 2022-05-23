@@ -35,7 +35,7 @@ i32_from_token :: proc(token: Token) -> i32{
         return i32(val)
     }else if token.typ == .BOOL{
         if token.value == "true" do return 1
-        return 0
+        return -1
     }else if token.typ == .CHAR{
         return i32(rune(token.value[0]))
     }else{

@@ -1,5 +1,49 @@
+@import ../stdlib/std @end
+
 fn main is
-    5 -> x
-    7 -> y
-    x y + syscall 10
+    "Jounce Test Suite" @putsln
+    "-----------------" @putsln
+    "Testing Data Types:" @putsln
+    "Numbers: Expect 1: " @puts 1 @putiln
+    "Booleans: Expect 1 & -1: " @puts true @puti " " @puts false @putiln
+    "Characters: Expect a: " @puts 97 @putcln
+    "Strings: Expect Chicken Parmesan: " @puts "Chicken Parmesan" @putsln
+
+    10 @putc
+
+    "Testing Arithmetic:" @putsln
+    "Expect 100: " @puts 7 2 - 5 + 10 * 10 / 90 + @putiln
+
+    10 @putc
+
+    "Testing Comparison:" @putsln
+    "Expect 100: " @puts
+    if 3 2 < do
+        90 @putiln
+    else 2 2 == do
+        100 @putiln
+    else
+        95 @putiln
+    end
+
+    10 @putc
+
+    "Testing While Loops And Local Variables:" @putsln
+    "Expect a countdown from 10 to 1: " @putsln
+    10 -> i
+    while i -5 > do
+        i @puti " " @puts
+        if i 1 == do break end
+        i 1 - -> i
+    end
+    10 @putcln
+    "Testing Functions:" @putsln
+    "Expect 100: " @puts 50 50 add @putiln 10 @putc
+
+    "If this has worked then macros and imports work as well!" @putsln
+
+end
+
+fn add of a b is
+    a b +
 end

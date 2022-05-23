@@ -55,7 +55,8 @@ In Jounce everything on the stack is a number. <br>
 - `if a b == do ... else b c == do ... else ... end`
 
 ### While Loop
-`while a b > do ... end`
+`while a b > do ... end` <br>
+loops support `break` but do not currently support `continue`.
 
 ### Macros
 `@macro my_macro ... @end`<br>

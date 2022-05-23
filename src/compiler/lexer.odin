@@ -27,9 +27,11 @@ lex_file :: proc(filename: string, token_buffer: ^[dynamic]Token, special_direct
     defer delete(lines)
 
     save_destination := token_buffer
-    for line, row in lines{
+    line_loop: for line, row in lines{
         col := 0
         for true{
+            if row >= len(lines) do break line_loop
+            
             token_start, value, typ := next_token(col, line)
             //len(value) does not account for quotes so this is a nessecary check
             if typ == .STR || typ == .CHAR{
@@ -37,7 +39,7 @@ lex_file :: proc(filename: string, token_buffer: ^[dynamic]Token, special_direct
             }else{
                 col += (token_start - col) + len(value)
             }
-            if value != ""{
+            if len(value) > 0{
                 if value[0] == '@'{
                     if value == "@end"{
                         save_destination = token_buffer
@@ -53,11 +55,6 @@ lex_file :: proc(filename: string, token_buffer: ^[dynamic]Token, special_direct
                         save_destination = &special_directives[len(special_directives)-1].tokens
                         delete(value)
                     }else{
-                        // directive := Directive{typ=.MACRO_INVOKE}
-                        // append(special_directives, directive)
-                        // save_destination = &special_directives[len(special_directives)-1].tokens
-                        // append(save_destination, Token{row=row, col=token_start, file=filename, typ=typ, value=value})
-                        // save_destination = token_buffer
                         save_destination = token_buffer
                         append(save_destination, Token{row=row, col=token_start, file=filename, typ=typ, value=value})
                     }
@@ -69,7 +66,7 @@ lex_file :: proc(filename: string, token_buffer: ^[dynamic]Token, special_direct
 
             //a value of "" is returned if a comment was encountered
             //system was built this way if we want comments to be tokens at some point
-            if value != "" do append(save_destination, Token{row=row, col=token_start, file=filename, typ=typ, value=value})
+            if len(value) > 0 do append(save_destination, Token{row=row, col=token_start, file=filename, typ=typ, value=value})
             
             //checks to see if we are at the end of the line
             if col >= len(line)-1 do break
