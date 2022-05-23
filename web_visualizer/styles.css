@@ -69,6 +69,9 @@ main{
     display: flex;
     flex-direction: column;
     align-items: center;
+    color: black;
+    box-sizing: border-box;
+    padding-bottom: 32px;
 }
 #code{
     width: 100%;
@@ -78,8 +81,30 @@ main{
 
 section{
     background-color: var(--background-color);
+    color: white;
+}
+#code > div{
+    display: flex;
+    flex-direction: column;
+    font-size: 14px;
+    height: 18px;
+    margin: 2px 0;
+    white-space: pre-wrap;
 }
 
-#ip > p{
-    
+#stack{
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    box-sizing: border-box;
+    padding-bottom: 5vh;
+}
+
+#stack > div{
+    margin: 5px 0;
+    width: 80%;
+    background-color: var(--accent-color);
+    font-size: 1rem;
+    color: black;
+    padding: 5px;
 }

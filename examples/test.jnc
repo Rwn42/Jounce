@@ -1,8 +1,5 @@
-@import ../stdlib/std @end
-
-
-
 fn main is
-    100 @puti
-    20 @puti
+    5 -> x
+    7 -> y
+    x y + syscall 10
 end
