@@ -7,7 +7,7 @@ import "core:math"
 
 import "../instructions"
 
-MAX_STACK_CAP :: 10
+MAX_STACK_CAP :: 15
 MAX_CALL_STACK_CAP :: 10
 MAX_LOCAL_VARS :: 30
 

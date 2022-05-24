@@ -240,7 +240,7 @@ compiler_add_inst_str :: proc(using compiler: ^Compiler, operation: instructions
     delete(runes)
 }
 
-compiler_open_block :: proc(using compiler: ^Compiler, typ: Block_Type){
+compiler_open_block :: #force_inline proc(using compiler: ^Compiler, typ: Block_Type){
     append(&open_blocks, Block{start=current_ip(&program)+1, typ=typ})
 }
 

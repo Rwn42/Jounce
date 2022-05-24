@@ -9,7 +9,7 @@ Stack-Based, concatenative, programming language. Built for school science fair 
 - [x] improve CLI (file output name / directory location)
 - [x] compile negative numbers (seems to work off rip)
 - [x] simple macro system
-- [] maybe some syntax sugar for multiple variable assignments (some_func -> a,b)
+- [] faster interpreter
 - [] better program error checker compile side
 - [] speed optimize compiler
 - [] web based visualization tool / debugger
@@ -88,3 +88,9 @@ function parameters are as follows `fn a of some_param1 some_param2 is ... end`
 ### Imports
 `@import some_file @end` -> allows access to all the functions and macros in the other file <br>
 **Note:** the imports are not namespaced so if two files both have function `f` then they will conflict.
+
+## Performance
+|Program|Language|Time|
+|-------|--------|----|
+|big loop|jounce|1.77|
+|big loop|python|0.52|
