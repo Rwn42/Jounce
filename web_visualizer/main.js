@@ -96,6 +96,7 @@ class Interpreter{
                 else if(operand == 12){
                     this.stack.pop()
                     this.stack.pop()
+                    this.consoleUpdate("Strings are not not currently supported.")
                 }
                 break
             }

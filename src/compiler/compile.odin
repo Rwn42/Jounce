@@ -346,7 +346,7 @@ compiler_delete :: proc(using compiler: ^Compiler){
 }
 
 compiler_save_as_text :: proc(compiler: ^Compiler, output_filepath: string) -> bool{
-    fd, err := os.open(output_filepath, os.O_CREATE | os.O_WRONLY, 0o777)
+    fd, err := os.open(output_filepath, os.O_CREATE | os.O_TRUNC | os.O_WRONLY, 0o777)
 
     if err != os.ERROR_NONE{
         fmt.eprintf("ERROR: Cannot open output file %s", output_filepath)
@@ -364,7 +364,7 @@ compiler_save_as_text :: proc(compiler: ^Compiler, output_filepath: string) -> b
 
 
 compiler_save_as_ir :: proc(compiler: ^Compiler, output_filepath: string) -> bool{
-    fd, err := os.open(output_filepath, os.O_CREATE | os.O_WRONLY, 0o777)
+    fd, err := os.open(output_filepath, os.O_CREATE | os.O_TRUNC | os.O_WRONLY, 0o777)
 
     if err != os.ERROR_NONE{
         fmt.eprintf("ERROR: Cannot open output file %s", output_filepath)

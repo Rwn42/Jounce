@@ -1,6 +1,6 @@
 package instructions
 
-Instruction :: struct{
+Instruction :: struct #packed{
     operation: Op,
     operand: i32,
 }
