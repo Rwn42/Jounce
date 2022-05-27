@@ -8,6 +8,7 @@ class Interpreter{
 
         this.stackElem = null;
         this.consoleElem = null;
+        this.callStackElem = null;
         this.codeElem = null;
 
         this.ok = true
@@ -117,6 +118,12 @@ class Interpreter{
                 this.stackElem.appendChild(stackPeice)
             }
         });
+        this.callStackElem.innerHTML = ""
+        this.call_stack.forEach(frame => {
+                const stackPeice = document.createElement("div")
+                stackPeice.textContent = frame.ip
+                this.callStackElem.appendChild(stackPeice)
+        });
     }
 
     consoleUpdate(text){
@@ -162,7 +169,9 @@ function loadFileTextIntoElement(filetext){
     vm.stackElem = document.querySelector("#stack");
     vm.consoleElem = document.querySelector("#console");
     vm.codeElem = codeSection
+    vm.callStackElem = document.querySelector("#callStack")
     const codeLines = codeSection.querySelectorAll("div")
-    codeLines[vm.ip].style.backgroundColor = "red"
+    if(codeLines[vm.ip]){codeLines[vm.ip].style.backgroundColor = "red"}
+    
 }
 
