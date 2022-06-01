@@ -42,6 +42,7 @@ fn main is
 
     "If this has worked then macros and imports work as well!" @putsln
 
+    "Press Enter To Exit: " @puts @getc
 end
 
 fn add of a b is

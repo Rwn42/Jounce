@@ -4,6 +4,7 @@ import "core:fmt"
 import "core:mem"
 import "core:os"
 import "core:math"
+import "core:c/libc"
 
 import "../instructions"
 
@@ -104,6 +105,9 @@ execute :: proc(vm: ^VM) -> i32{
                         len := stack[sp-1]
                         sp -= 2
                         fmt.print(transmute(string)vm.strings[start:start+len])
+                    case 13:
+                        stack[sp] = libc.getchar()
+                        sp += 1
                 }
             case .MVLV:
                 call_stack[csp-1].locals[operand] = stack[sp-1]

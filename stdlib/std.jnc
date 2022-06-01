@@ -13,3 +13,5 @@
 @macro putsln syscall 12 10 syscall 11 @end
 
 @macro putcln syscall 11 10 syscall 11 @end
+
+@macro getc syscall 13 @end

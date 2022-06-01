@@ -12,7 +12,7 @@ Stack-Based, concatenative, programming language. Built for school science fair 
 - [] faster interpreter
 - [] better program error checker compile side
 - [] speed optimize compiler
-- [] web based visualization tool / debugger
+- [x] web based visualization tool / debugger (not great but good enough for science fair presentation purposes.)
 
 
 ## Installation
