@@ -111,7 +111,7 @@ compile_tokens :: proc(using compiler: ^Compiler) -> bool{
                     for macro_token, i in declared_macros[macro_name]{
                         insertable_token := macro_token
                         insertable_token.value = strings.clone(macro_token.value)
-                        insert_at_elem(&compiler.tokens, idx+i+1, insertable_token)  
+                        inject_at(&compiler.tokens, idx+i+1, insertable_token)  
                     }
                 }else{
                     err_msg = "ERROR: Undefined Macro"
