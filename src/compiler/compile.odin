@@ -23,6 +23,8 @@ Compiler :: struct{
     skip_token_count: int,
 
     declared_locals: map[string]int,
+    declared_constants: map[string]int,
+    iota: int,
 
     linker: Linker,
 
@@ -118,7 +120,10 @@ compile_tokens :: proc(using compiler: ^Compiler) -> bool{
                     err_token = token
                     return false
                 }   
-            }else{
+            }else if value in declared_constants{
+                compiler_add_inst(compiler, .PUSH, declared_constants[value])
+            }
+            else{
                 compiler_add_inst_i32(compiler, .HALT, 69)
                 append(&linker.encountered_identifiers, Identifier{token, current_ip(&program)})
             }
@@ -205,6 +210,36 @@ compile_keyword_token :: proc(using compiler: ^Compiler, using token: Token, idx
             skip_token_count = i
         case "is":
             break
+        case "const":
+            num, ok := strconv.parse_int(tokens[idx+2].value) 
+            if !ok{
+                err_msg = "ERROR: number only inside constant literal"
+                err_token = tokens[idx+2]
+                return false
+            }
+            if tokens[idx+3].value == "offset"{
+                declared_constants[tokens[idx+1].value] = iota
+                iota += num
+                skip_token_count = 1
+                
+            }else if tokens[idx+2].value == "reset"{
+                declared_constants[tokens[idx+1].value] = iota
+                iota = 0
+            }else{
+                declared_constants[tokens[idx+1].value] = num
+            }
+            skip_token_count += 3
+        case "enum":
+            i := 1
+            iota = 0
+            for true{
+                if tokens[idx+i].value == "end" do break
+                declared_constants[tokens[idx+i].value] = iota
+                iota += 1
+                i += 1
+            }
+            iota = 0
+            skip_token_count = i
         case:
             err_msg = "ERROR: Keyword May Not Be Implemented"
             err_token = token
@@ -341,6 +376,7 @@ compiler_delete :: proc(using compiler: ^Compiler){
     delete(open_blocks)
     delete(imported_files)
     delete(declared_locals)
+    delete(declared_constants)
     delete(string_bytes)
     linker_delete(&linker)
 }

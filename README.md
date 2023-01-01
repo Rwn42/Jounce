@@ -85,6 +85,23 @@ function parameters are as follows `fn a of some_param1 some_param2 is ... end`
 `x 3 + -> x` -> adds 3 to x and stores it back in x <br>
 **Note:** variables are block scoped
 
+### Constants
+`const x 32 end` -> x is now available for every function in the file
+`const b 1 offset end` -> sets b to the compilers internal iota counter and increments said counter<br>
+`const c reset end` -> sets c to the current iota value and resets it
+
+the last two examples can be used to create structs
+
+### Enums
+```s
+enum
+    ONE
+    TWO
+    THREE
+    FOUR
+end
+```
+
 ### Imports
 `@import some_file @end` -> allows access to all the functions and macros in the other file <br>
 **Note:** the imports are not namespaced so if two files both have function `f` then they will conflict.
